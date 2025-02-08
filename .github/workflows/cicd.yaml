@@ -1,0 +1,106 @@
+name: CICD Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        id: checkout
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.23.4"
+
+      - name: Install dependencies
+        run: |
+          go mod download
+
+      - name: Run tests with coverage
+        id: test-coverage
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+        continue-on-error: true
+
+      - name: Check coverage percentage
+        run: |
+          # Ensure coverage file exists
+          if [[ ! -f coverage.out ]]; then
+            echo "Error: coverage.out not found"
+            exit 1
+          fi
+
+          # Extract coverage percentage
+          coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
+
+          # Set minimum coverage from repository var
+          minimum_coverage=${{ vars.MINIMUM_COVERAGE }}
+
+          # Debugging: Print extracted value
+          echo "Extracted Coverage: $coverage%"
+          echo "Minimum Coverage: $minimum_coverage%"
+
+          # Validate coverage and enforce minimum threshold
+          if (( $(echo "$coverage < $minimum_coverage" | bc) )); then
+            echo "Coverage is below $minimum_coverage% ($coverage%), failing..."
+            exit 1
+          fi
+
+          echo "Coverage is sufficient ($coverage%)"
+
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code at tag
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Set up Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.23.4'
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        run: |
+          TAG=${{ github.ref_name }}
+          echo "Building image with tag ${TAG}"
+          docker build --build-arg BUILD_VERSION=${TAG} -t ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${TAG}} .
+          docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${TAG}:${TAG}
+
+      - name: Generate kubeconfig and Deploy to EKS using kubectl
+        run: |
+          {
+              echo 'EKS_CREDS<<EOF'
+              aws eks --region us-east-1 update-kubeconfig --name go-kafka-order-producer-eks --dry-run | base64
+              echo EOF
+          } >> $GITHUB_ENV
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ env.EKS_CREDS }}
+      - run: |
+          TAG=${{ github.ref_name }}
+          kubectl set image deployment/server server=${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${TAG}

@@ -1,0 +1,35 @@
+name: Deploy to EKS
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'ECR Image Tag'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Generate kubeconfig and Deploy to EKS using kubectl
+        run: |
+          {
+              echo 'EKS_CREDS<<EOF'
+              aws eks --region us-east-1 update-kubeconfig --name go-kafka-order-producer-eks --dry-run | base64
+              echo EOF
+          } >> $GITHUB_ENV
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ env.EKS_CREDS }}
+      - run: |
+          TAG=${{ github.ref_name }}
+          kubectl set image deployment/server server=${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${TAG}

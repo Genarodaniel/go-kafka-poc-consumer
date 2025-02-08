@@ -1,0 +1,60 @@
+name: Test and Coverage
+
+on:
+  push:
+    branches:
+    - '**'
+  pull_request:
+    branches: [main]
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        id: checkout
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.23.4"
+
+      - name: Install dependencies
+        run: |
+          go mod download
+
+      - name: Run tests with coverage
+        id: test-coverage
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Check coverage percentage
+        run: |
+          # Ensure coverage file exists
+          if [[ ! -f coverage.out ]]; then
+            echo "Error: coverage.out not found"
+            exit 1
+          fi
+
+          # Extract coverage percentage
+          coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
+
+          # Set minimum coverage from repository var
+          minimum_coverage=${{ vars.MINIMUM_COVERAGE }}
+
+          # Debugging: Print extracted value
+          echo "Extracted Coverage: $coverage%"
+          echo "Minimum Coverage: $minimum_coverage%"
+
+          # Validate coverage and enforce minimum threshold
+          if (( $(echo "$coverage < $minimum_coverage" | bc) )); then
+            echo "Coverage is below $minimum_coverage% ($coverage%), failing..."
+            exit 1
+          fi
+
+          echo "Coverage is sufficient ($coverage%)"

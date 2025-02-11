@@ -3,9 +3,9 @@ package order
 import (
 	"context"
 	"fmt"
-	"go-kafka-order-producer/internal/repository"
+	"go-kafka-poc-consumer/internal/repository"
 
-	orderRepository "go-kafka-order-producer/internal/repository/order"
+	orderRepository "go-kafka-poc-consumer/internal/repository/order"
 )
 
 type OrderServiceInterface interface {

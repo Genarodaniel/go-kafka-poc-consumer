@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"go-kafka-order-producer/internal/repository/order"
+	"go-kafka-poc-consumer/internal/repository/order"
 )
 
 type OrderRepositoryInterface interface {

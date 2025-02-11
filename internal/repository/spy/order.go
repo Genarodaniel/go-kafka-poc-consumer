@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"go-kafka-order-producer/internal/repository"
-	"go-kafka-order-producer/internal/repository/order"
+	"go-kafka-poc-consumer/internal/repository"
+	"go-kafka-poc-consumer/internal/repository/order"
 )
 
 type OrderRepositorySpy struct {

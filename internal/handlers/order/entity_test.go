@@ -1,7 +1,7 @@
 package order_test
 
 import (
-	"go-kafka-order-producer/internal/api/order"
+	"go-kafka-poc-consumer/internal/handlers/order"
 	"testing"
 
 	"github.com/google/uuid"

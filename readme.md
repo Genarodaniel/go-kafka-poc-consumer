@@ -25,7 +25,7 @@ In the ### Terraform Setup sections is going to be created an user with the need
 #### Variables
 - `AWS_REGION`: The AWS region where resources will be deployed (e.g., `us-east-1`).
 - `IMAGE_REGISTRY`: The Docker registry to use for storing images (e.g., `536697241595.dkr.ecr.us-east-1.amazonaws.com` or `docker.io`).
-- `IMAGE_NAME`: The name of the Docker image (e.g., `danielsgenaro/go-kafka-order-producer`).
+- `IMAGE_NAME`: The name of the Docker image (e.g., `danielsgenaro/go-kafka-poc-consumer`).
 - `MINIMUM_COVERAGE`: Minimum test coverage percentage required to pass CI checks (default: `35`).
 
 These variables should be added as repository secrets or configured in your CI/CD provider (e.g., GitHub Actions, GitLab CI).

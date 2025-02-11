@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"go-kafka-order-producer/config"
+	"go-kafka-poc-consumer/config"
 
 	_ "github.com/lib/pq"
 
@@ -40,7 +40,7 @@ func Connect() *sql.DB {
 
 func Migrate(db *sql.DB) {
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	m, err := migrate.NewWithDatabaseInstance("file://internal/infra/database/migrations", config.Config.DBDriver, driver)
+	m, err := migrate.NewWithDatabaseInstance("file:..//internal/infra/database/migrations", config.Config.DBDriver, driver)
 	if err != nil {
 		panic(err)
 	}

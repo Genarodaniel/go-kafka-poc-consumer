@@ -24,7 +24,7 @@ jobs:
         run: |
           {
               echo 'EKS_CREDS<<EOF'
-              aws eks --region us-east-1 update-kubeconfig --name go-kafka-order-producer-eks --dry-run | base64
+              aws eks --region us-east-1 update-kubeconfig --name go-kafka-poc-consumer-eks --dry-run | base64
               echo EOF
           } >> $GITHUB_ENV
       - uses: tale/kubectl-action@v1

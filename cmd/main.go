@@ -1,9 +1,12 @@
 package main
 
 import (
-	"go-kafka-order-producer/config"
-	"go-kafka-order-producer/internal/infra/database"
-	"go-kafka-order-producer/internal/server"
+	"go-kafka-poc-consumer/config"
+	"go-kafka-poc-consumer/internal/infra/database"
+	"go-kafka-poc-consumer/internal/infra/kafka"
+	"go-kafka-poc-consumer/worker"
+
+	geutils "github.com/GenaroDaniel/geutils/pkg/events"
 )
 
 func main() {
@@ -12,11 +15,16 @@ func main() {
 	}
 
 	db := database.Connect()
-	defer db.Close()
-
 	database.Migrate(db)
 
-	s := server.Init(db)
-	s.Run()
+	defer db.Close()
+	eventDispatcher := geutils.NewEventDispatcher()
+	kafkaClient, err := kafka.NewKafka(config.Config.KafkaSeeds, config.Config.KafkaTopics, *eventDispatcher)
+	if err != nil {
+		panic(err)
+	}
+
+	kafkaWorker := worker.NewWorker(db, kafkaClient, eventDispatcher)
+	kafkaWorker.Start()
 
 }

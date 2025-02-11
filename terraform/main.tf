@@ -14,7 +14,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  cluster_name = "go-kafka-order-producer-eks"
+  cluster_name = "go-kafka-poc-consumer-eks"
 }
 
 
@@ -22,7 +22,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
 
-  name = "go-kafka-order-producer-vpc"
+  name = "go-kafka-poc-consumer-vpc"
 
   cidr = "10.0.0.0/16"
   azs  = slice(data.aws_availability_zones.available.names, 0, 3)

@@ -30,6 +30,10 @@ func Connect() *sql.DB {
 		panic(err)
 	}
 
+	db.SetMaxOpenConns(0)
+	db.SetMaxIdleConns(0)
+	fmt.Println(db.Stats().MaxIdleClosed)
+
 	if err := db.Ping(); err != nil {
 		db.Close()
 		panic(err)

@@ -10,7 +10,7 @@ type CreateOrderEvent struct {
 }
 
 func (c *CreateOrderEvent) GetName() string {
-	return "order.create"
+	return string(CreateOrder)
 }
 
 func (c *CreateOrderEvent) GetDateTime() time.Time {

@@ -79,7 +79,6 @@ func (k *Kafka) Consume(ctx context.Context) {
 				func(p kgo.FetchTopicPartition) {
 					defer wg.Done()
 					for _, record := range p.Records {
-
 						key := string(record.Key)
 
 						switch key {
@@ -88,14 +87,14 @@ func (k *Kafka) Consume(ctx context.Context) {
 								DateTime: time.Now(),
 								Payload:  record.Value,
 							}
-							fmt.Println("Received createOrder event:", string(record.Value))
+							fmt.Println("\nReceived createOrder event:", string(record.Value))
 							err := k.Dispatcher.Dispatch(ctx, event)
 							if err != nil {
-								fmt.Println("createOrder event error:", err)
+								fmt.Println("\n createOrder event error:", err)
 							}
 
 						default:
-							fmt.Println("Unknown event key:", key)
+							fmt.Println("\n Unknown event key:", key)
 						}
 
 					}

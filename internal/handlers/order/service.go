@@ -24,8 +24,11 @@ func NewOrderService(orderRepository repository.OrderRepositoryInterface) *Order
 
 func (a *OrderService) PostOrder(ctx context.Context, order *PostOrderRequest) (*PostOrderResponse, error) {
 	orderEntity := orderRepository.Order{
-		StoreID:  order.StoreID,
-		ClientID: order.ClientID,
+		ID:                order.OrderID,
+		StoreID:           order.StoreID,
+		ClientID:          order.ClientID,
+		NotificationEmail: order.NotificationEmail,
+		Status:            order.Status,
 	}
 
 	result, err := a.OrderRepository.SaveOrder(ctx, orderEntity)

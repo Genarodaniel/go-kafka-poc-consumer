@@ -88,18 +88,17 @@ func (k *Kafka) Consume(ctx context.Context) {
 								DateTime: time.Now(),
 								Payload:  record.Value,
 							}
-							fmt.Println("\nReceived createOrder event:", string(record.Value))
-							err := k.Dispatcher.Dispatch(ctx, event)
+
+							fmt.Println("\nStarted createOrder event:", string(record.Value))
+
+							err := k.DispatchAndCommitEvent(ctx, event, record)
 							if err != nil {
-								fmt.Println("\n createOrder event error:", err)
+								//here i should send to an error queue
+								fmt.Println("error to dispatch and commit event", record.Value)
 								continue
 							}
 
-							err = k.Client.CommitRecords(ctx, record)
-							if err != nil {
-								fmt.Println("error to commit offset:", err)
-								continue
-							}
+							fmt.Println("\nCompleted createOrder event")
 
 						default:
 							fmt.Println("\n Unknown event key:", key)
@@ -111,4 +110,18 @@ func (k *Kafka) Consume(ctx context.Context) {
 			wg.Wait()
 		}
 	}
+}
+
+func (k *Kafka) DispatchAndCommitEvent(ctx context.Context, event geutils.EventInterface, record *kgo.Record) error {
+	err := k.Dispatcher.Dispatch(ctx, event)
+	if err != nil {
+		return fmt.Errorf("\n createOrder event error: %v", err)
+	}
+
+	err = k.Client.CommitRecords(ctx)
+	if err != nil {
+		return fmt.Errorf("error to commit offset: %v", err)
+	}
+
+	return nil
 }

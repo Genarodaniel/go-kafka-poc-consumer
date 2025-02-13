@@ -34,6 +34,7 @@ func NewKafka(seeds []string, topics []string, dispatcher geutils.EventDispatche
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
 		kgo.ConsumeTopics(topics...),
+		kgo.ConsumerGroup("order-worker"),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kafka client: %s", err.Error())
@@ -91,6 +92,13 @@ func (k *Kafka) Consume(ctx context.Context) {
 							err := k.Dispatcher.Dispatch(ctx, event)
 							if err != nil {
 								fmt.Println("\n createOrder event error:", err)
+								continue
+							}
+
+							err = k.Client.CommitRecords(ctx, record)
+							if err != nil {
+								fmt.Println("error to commit offset:", err)
+								continue
 							}
 
 						default:
